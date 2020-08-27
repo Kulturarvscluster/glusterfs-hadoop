@@ -87,12 +87,13 @@ mkdir -p ${WORK_DIR}/blocks
 #create some loopback bricks
 
 createGlusterVolume() {
-  LOOP_BRICKS=()
+#  [ -f ${WORK_DIR}/cleanup.sh ] && ${WORK_DIR}/cleanup.sh
 
   # TODO: Need to run a force on this command so it doesn't prompt
 
+
   GLUSTER_VOLUME_CMD="gluster volume create ${GLUSTER_VOLUME} "
-  HOSTNAME=$(hostname -s)
+  HOSTNAME=$(hostname)
 
   for ((i = 1; i <= ${NUMBER_OF_BRICKS}; i++)); do
     # Create an empty block device to use as loop back filesystem
@@ -104,7 +105,6 @@ createGlusterVolume() {
     # find a free loopback device
     # LOOP_BRICKS[${i}]=${WORK_DIR}/bricks/brick${i}
     LB_BRICK=$(losetup -f)
-    LOOP_BRICKS[${i}]="${LB_BRICK}"
 
     echo "creating loopback file system on loopback: ${LB_BRICK} block: ${BLOCK}"
     losetup ${LB_BRICK} ${BLOCK}
@@ -123,9 +123,10 @@ createGlusterVolume() {
   echo "running: ${GLUSTER_VOLUME_CMD}"
   $GLUSTER_VOLUME_CMD
   gluster volume start ${GLUSTER_VOLUME}
+  (mount | grep /mnt/${GLUSTER_VOLUME}) && umount /mnt/${GLUSTER_VOLUME}
   mkdir -p /mnt/${GLUSTER_VOLUME}
   mount -t glusterfs ${HOSTNAME}:${GLUSTER_VOLUME} /mnt/${GLUSTER_VOLUME}
-  chmod a+w /mnt/${GLUSTER_VOLUME}
+  chmod a+w /mnt/${GLUSTER_VOLUME}/.
 }
 
 createCleanupScript() {
@@ -134,19 +135,19 @@ createCleanupScript() {
   echo "#!/bin/sh" >${WORK_DIR}/cleanup.sh
   chmod +x ${WORK_DIR}/cleanup.sh
 
+#  echo "set -x" >>${WORK_DIR}/cleanup.sh
+  echo "umount /mnt/${GLUSTER_VOLUME}" >>${WORK_DIR}/cleanup.sh
   echo "gluster volume stop ${GLUSTER_VOLUME}" >>${WORK_DIR}/cleanup.sh
   echo "gluster volume delete ${GLUSTER_VOLUME}" >>${WORK_DIR}/cleanup.sh
   # Unmount the bricks and loopback devices
 
-  for ((i = 0; i <= ${NUMBER_OF_BRICKS}; i++)); do
+  for ((i = 1; i <= ${NUMBER_OF_BRICKS}; i++)); do
     # Create an empty block device to use as loop back filesystem
     BLOCK=${WORK_DIR}/blocks/block${i}
     BRICK=${WORK_DIR}/bricks/brick${i}
     echo "umount $BRICK" >>${WORK_DIR}/cleanup.sh
-    echo "losetup -d ${LOOP_BRICKS[$i]}" >>${WORK_DIR}/cleanup.sh
     echo "rm -rf $BLOCK" >>${WORK_DIR}/cleanup.sh
     echo "rm -rf $BRICK" >>${WORK_DIR}/cleanup.sh
-
   done
 
   echo "rm -rf ${WORK_DIR}" >>${WORK_DIR}/cleanup.sh

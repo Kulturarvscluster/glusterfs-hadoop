@@ -8,7 +8,7 @@
   <!--  default hadoop 1.x glusterfs with no additional integrity checking on files -->
   <property>
     <name>fs.glusterfs.impl</name>
-    <value>org.apache.hadoop.fs.glusterfs.GlusterFileSystem</value>
+    <value>org.apache.hadoop.fs.filesystem.GlusterFileSystem</value>
   </property>
 
   <!--  this is an optional hadoop 1.x glusterfs which does extra integrity checks on files. -->
@@ -28,7 +28,7 @@
   <!--  this is the default glusterfs hook with no additional integrity checking on files -->
   <property>
     <name>fs.AbstractFileSystem.glusterfs.impl</name>
-    <value>org.apache.hadoop.fs.local.GlusterFs</value> 
+    <value>org.apache.hadoop.fs.filecontext.GlusterFs</value>
   </property>
 
   <!--  this is an optional glusterfs which does extra integrity checks on files. -->
