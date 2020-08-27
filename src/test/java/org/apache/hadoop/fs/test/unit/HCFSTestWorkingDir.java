@@ -1,13 +1,8 @@
 package org.apache.hadoop.fs.test.unit;
 
-import static org.apache.hadoop.fs.FileSystemTestHelper.getTestRootPath;
-
-import java.io.File;
-
 import junit.framework.Assert;
-
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.FileSystemTestHelper;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.test.connector.HcfsTestConnectorFactory;
 import org.apache.hadoop.fs.test.connector.HcfsTestConnectorInterface;
@@ -17,11 +12,23 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HCFSTestWorkingDir{
+import java.io.File;
 
+
+public class HCFSTestWorkingDir{
+    
+    private final FileSystemTestHelper fileSystemTestHelper;
     Logger log = LoggerFactory.getLogger(HCFSTestWorkingDir.class);
     FileSystem fSys;
-
+    
+    public HCFSTestWorkingDir() {
+        this.fileSystemTestHelper = createFileSystemHelper();
+    }
+    
+    protected FileSystemTestHelper createFileSystemHelper() {
+        return new FileSystemTestHelper();
+    }
+    
     @Before
     public void setUp() throws Exception{
         HcfsTestConnectorInterface connector=
@@ -55,6 +62,6 @@ public class HCFSTestWorkingDir{
     
     @After
     public void tearDown() throws Exception{
-        fSys.delete(getTestRootPath(fSys, "test"), true);
+        fSys.delete(fileSystemTestHelper.getTestRootPath(fSys, "test"), true);
     }
 }

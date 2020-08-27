@@ -1,11 +1,8 @@
 package org.apache.hadoop.fs.test.unit;
 
-import static org.apache.hadoop.fs.FileSystemTestHelper.getTestRootPath;
-
-import java.io.IOException;
-
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileSystemTestHelper;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.glusterfs.GlusterVolume;
 import org.apache.hadoop.fs.test.connector.HcfsTestConnectorFactory;
@@ -15,9 +12,11 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+
 
 /**
  *  A class for performance and IO related unit tests.
@@ -32,6 +31,16 @@ public class HCFSPerformanceIOTests {
     static FileSystem fs ; 
     Logger log = LoggerFactory.getLogger(HCFSPerformanceIOTests.class);
     
+    final FileSystemTestHelper fileSystemTestHelper;
+    
+    public HCFSPerformanceIOTests() {
+        this.fileSystemTestHelper = createFileSystemHelper();
+    }
+    
+    protected FileSystemTestHelper createFileSystemHelper() {
+        return new FileSystemTestHelper();
+    }
+    
     @BeforeClass
     public static void setup() throws Exception {
     	HcfsTestConnectorInterface connector = HcfsTestConnectorFactory.getHcfsTestConnector();
@@ -44,7 +53,7 @@ public class HCFSPerformanceIOTests {
     }
 
     public Path bufferoutpath(){
-        return getTestRootPath(fs, "buffering_test"+HCFSPerformanceIOTests.class.getName());
+        return fileSystemTestHelper.getTestRootPath(fs, "buffering_test"+HCFSPerformanceIOTests.class.getName());
     }
 
     @After

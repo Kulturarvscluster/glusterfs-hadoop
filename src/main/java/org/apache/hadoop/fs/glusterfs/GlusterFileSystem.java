@@ -28,18 +28,17 @@
  */
 package org.apache.hadoop.fs.glusterfs;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.FilterFileSystem;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 public class GlusterFileSystem extends FilterFileSystem{
 
@@ -98,8 +97,20 @@ public class GlusterFileSystem extends FilterFileSystem{
     public boolean mkdirs(Path f) throws IOException {
         return mkdirs(f, FsPermission.getDirDefault().applyUMask(FsPermission.getUMask(getConf())));
     }
-
+    
+    @Override
+    public boolean mkdirs(Path f, FsPermission permission) throws IOException {
+        FsPermission uMask = FsPermission.getUMask(getConf());
+        FsPermission permission1 = permission.applyUMask(uMask);
+        return super.mkdirs(f, permission1);
+    }
+    
     public String toString(){
         return "Gluster File System, no CRC.";
+    }
+    
+    @Override
+    public String getScheme() {
+        return "glusterfs";
     }
 }

@@ -25,7 +25,6 @@
 
 package org.apache.hadoop.fs.test.unit;
 
-import static org.apache.hadoop.fs.FileSystemTestHelper.getTestRootPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -34,10 +33,12 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileSystemTestHelper;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -57,9 +58,18 @@ import org.junit.Test;
  */
 public class HcfsFileSystemTest{
     
-    static FileSystem fs ; 
+    static FileSystem fs ;
     
-
+    final FileSystemTestHelper fileSystemTestHelper;
+    
+    public HcfsFileSystemTest() {
+        this.fileSystemTestHelper = createFileSystemHelper();
+    }
+    
+    protected FileSystemTestHelper createFileSystemHelper() {
+        return new FileSystemTestHelper();
+    }
+    
     /**
      * See MAPREDUCE-5902 for context on why this test is critical
      * for ecosystem interoperability.
@@ -92,7 +102,7 @@ public class HcfsFileSystemTest{
 
     @After
     public void tearDown() throws Exception {
-  	  fs.delete(getTestRootPath(fs, "test"),true);
+  	  fs.delete(fileSystemTestHelper.getTestRootPath(fs, "test"),true);
     }
     
     @org.junit.Test
@@ -157,34 +167,43 @@ public class HcfsFileSystemTest{
 
     @org.junit.Test
     public void testPermissions() throws Exception{
-
-        Path myFile=new Path("filePerm.txt");
-        fs.create(myFile);
-        short perm=0777;
-        fs.setPermission(myFile, new FsPermission(perm));
-        assertEquals(fs.getFileStatus(myFile).getPermission().toShort(), perm);
-
-        perm=0700;
-        fs.setPermission(myFile, new FsPermission(perm));
-        assertEquals(fs.getFileStatus(myFile).getPermission().toShort(), perm);
-
-        fs.delete(myFile);
-        assertFalse(fs.exists(myFile));
-        
-        /* directory permissions */
-        Path directory = new Path("aa/bb/cc");
-        perm = 0700;
-        fs.mkdirs(directory, new FsPermission(perm));
-        assertEquals(fs.getFileStatus(directory).getPermission().toShort(), perm);
-        fs.delete(new Path("aa"),true);
-        assertFalse(fs.exists(directory));
-        
-        
-        perm = 0777;
-        fs.mkdirs(directory, new FsPermission(perm));
-        assertEquals(fs.getFileStatus(directory).getPermission().toShort(), perm);
-        fs.delete(new Path("aa"),true);
-        assertFalse(fs.exists(directory));
+    
+        Configuration conf = fs.getConf();
+        String oldUmask = conf.get(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY);
+        try {
+            conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, "000");
+    
+            Path myFile = new Path("filePerm.txt");
+            fs.create(myFile);
+            short perm = 0777;
+            fs.setPermission(myFile, new FsPermission(perm));
+            assertEquals(perm, fs.getFileStatus(myFile).getPermission().toShort());
+    
+            perm = 0700;
+            fs.setPermission(myFile, new FsPermission(perm));
+            assertEquals(perm, fs.getFileStatus(myFile).getPermission().toShort());
+    
+            fs.delete(myFile);
+            assertFalse(fs.exists(myFile));
+    
+            /* directory permissions */
+            Path directory = new Path("aa/bb/cc");
+            perm = 0700;
+            fs.mkdirs(directory, new FsPermission(perm));
+            FsPermission permission = fs.getFileStatus(directory).getPermission();
+            assertEquals(perm, permission.toShort());
+            fs.delete(new Path("aa"), true);
+            assertFalse(fs.exists(directory));
+    
+    
+            perm = 0777;
+            fs.mkdirs(directory, new FsPermission(perm));
+            assertEquals(perm, fs.getFileStatus(directory).getPermission().toShort());
+            fs.delete(new Path("aa"), true);
+            assertFalse(fs.exists(directory));
+        } finally {
+            conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, oldUmask);
+        }
     }
     
     @org.junit.Test

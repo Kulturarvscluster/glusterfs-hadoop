@@ -19,28 +19,21 @@
 
 package org.apache.hadoop.fs.test.unit;
 
-import static org.apache.hadoop.fs.FileSystemTestHelper.getTestRootPath;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileSystemTestHelper;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.permission.FsAction;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.test.connector.HcfsTestConnectorFactory;
 import org.apache.hadoop.fs.test.connector.HcfsTestConnectorInterface;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
+
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for HCFS classes.
@@ -48,8 +41,17 @@ import org.junit.Test;
  */
 public class HcfsUmaskTest{
     
-    static FileSystem fs ; 
+    static FileSystem fs ;
     
+    final FileSystemTestHelper fileSystemTestHelper;
+    
+    public HcfsUmaskTest() {
+        this.fileSystemTestHelper = createFileSystemHelper();
+    }
+    
+    protected FileSystemTestHelper createFileSystemHelper() {
+        return new FileSystemTestHelper();
+    }
     @BeforeClass
     public static void setup() throws Exception {
     	HcfsTestConnectorInterface connector = HcfsTestConnectorFactory.getHcfsTestConnector();
@@ -63,7 +65,7 @@ public class HcfsUmaskTest{
 
     @After
     public void tearDown() throws Exception {
-        fs.delete(getTestRootPath(fs, "test"),true);
+        fs.delete(fileSystemTestHelper.getTestRootPath(fs, "test"), true);
     }
     
     @org.junit.Test
